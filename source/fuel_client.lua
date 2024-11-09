@@ -18,15 +18,17 @@ local inBlacklisted = false
 
 function ManageFuelUsage(vehicle)
 	if not DecorExistOn(vehicle, Config.FuelDecor) then
-		SetFuel(vehicle, math.random(200, 800) / 10)
+		MaxFuel = GetMaxFuel(vehicle)
+		SetFuelValue(vehicle, GetRandomFuelLevel(MaxFuel))
 	elseif not fuelSynced then
-		SetFuel(vehicle, GetFuel(vehicle))
+		MaxFuel = GetMaxFuel(vehicle)
+		SetFuelValue(vehicle, GetFuel(vehicle))
 
 		fuelSynced = true
 	end
 
 	if IsVehicleEngineOn(vehicle) then
-		SetFuel(vehicle, GetVehicleFuelLevel(vehicle) - Config.FuelUsage[Round(GetVehicleCurrentRpm(vehicle), 1)] * (Config.Classes[GetVehicleClass(vehicle)] or 1.0) / 10)
+		SetFuelValue(vehicle, GetVehicleFuelLevel(vehicle) - Config.FuelUsage[Round(GetVehicleCurrentRpm(vehicle), 1)] * (Config.Classes[GetVehicleClass(vehicle)] or 1.0) / 10)
 	end
 end
 
@@ -122,15 +124,15 @@ AddEventHandler('fuel:startFuelUpTick', function(pumpObject, ped, vehicle)
 			currentFuel = oldFuel + fuelToAdd
 		end
 
-		if currentFuel > 100.0 then
-			currentFuel = 100.0
+		if currentFuel > MaxFuel then
+			currentFuel = MaxFuel
 			isFueling = false
 		end
 
 		currentCost = currentCost + extraCost
 
 		if currentCash >= currentCost then
-			SetFuel(vehicle, currentFuel)
+			SetFuelValue(vehicle, currentFuel)
 		else
 			isFueling = false
 		end
@@ -158,6 +160,7 @@ AddEventHandler('fuel:refuelFromPump', function(pumpObject, ped, vehicle)
 		end
 
 		local vehicleCoords = GetEntityCoords(vehicle)
+		local fuelPercent = Round(currentFuel / MaxFuel * 100, 1)
 
 		if pumpObject then
 			local stringCoords = GetEntityCoords(pumpObject)
@@ -168,9 +171,9 @@ AddEventHandler('fuel:refuelFromPump', function(pumpObject, ped, vehicle)
 			end
 
 			DrawText3Ds(stringCoords.x, stringCoords.y, stringCoords.z + 1.2, Config.Strings.CancelFuelingPump .. extraString)
-			DrawText3Ds(vehicleCoords.x, vehicleCoords.y, vehicleCoords.z + 0.5, Round(currentFuel, 1) .. "%")
+			DrawText3Ds(vehicleCoords.x, vehicleCoords.y, vehicleCoords.z + 0.5, fuelPercent .. "%")
 		else
-			DrawText3Ds(vehicleCoords.x, vehicleCoords.y, vehicleCoords.z + 0.5, Config.Strings.CancelFuelingJerryCan .. "\nGas can: ~g~" .. Round(GetAmmoInPedWeapon(ped, 883325847) / 4500 * 100, 1) .. "% | Vehicle: " .. Round(currentFuel, 1) .. "%")
+			DrawText3Ds(vehicleCoords.x, vehicleCoords.y, vehicleCoords.z + 0.5, Config.Strings.CancelFuelingJerryCan .. "\nGas can: ~g~" .. Round(GetAmmoInPedWeapon(ped, 883325847) / 4500 * 100, 1) .. "% | Vehicle: " .. fuelPercent .. "%")
 		end
 
 		if not IsEntityPlayingAnim(ped, "timetable@gardener@filling_can", "gar_ig_5_filling_can", 3) then

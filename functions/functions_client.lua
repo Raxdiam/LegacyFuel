@@ -1,11 +1,28 @@
+MaxFuel = 64.0
+
+function GetRandomFuelLevel(capacity)
+  local min = capacity / 3.0
+  local max = capacity - capacity / 4.0
+  return math.random() * (max - min) + min
+end
+
+function GetMaxFuel(vehicle)
+	return GetVehicleHandlingFloat(vehicle, 'CHandlingData', 'fPetrolTankVolume')
+end
+
 function GetFuel(vehicle)
 	return DecorGetFloat(vehicle, Config.FuelDecor)
 end
 
+function SetFuelValue(vehicle, fuel)
+	SetVehicleFuelLevel(vehicle, fuel + 0.0)
+	DecorSetFloat(vehicle, Config.FuelDecor, GetVehicleFuelLevel(vehicle))
+end
+
 function SetFuel(vehicle, fuel)
 	if type(fuel) == 'number' and fuel >= 0 and fuel <= 100 then
-		SetVehicleFuelLevel(vehicle, fuel + 0.0)
-		DecorSetFloat(vehicle, Config.FuelDecor, GetVehicleFuelLevel(vehicle))
+		local realFuel = (fuel / 100) * MaxFuel
+		SetFuelValue(vehicle, realFuel)
 	end
 end
 
